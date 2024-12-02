@@ -1,1 +1,14 @@
-spring.application.name=ebankify_security
+spring:
+  application:
+    name: ebankify_security
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ebankify_security
+    username: root
+    password: ;(.314Luiv./
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8081
