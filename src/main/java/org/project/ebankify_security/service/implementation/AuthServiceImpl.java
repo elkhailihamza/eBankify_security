@@ -6,15 +6,22 @@ import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dao.RoleDAO;
 import org.project.ebankify_security.dao.UserDAO;
 import org.project.ebankify_security.dto.AuthDTO;
+import org.project.ebankify_security.dto.AuthTokenResponseDTO;
 import org.project.ebankify_security.dto.mapper.UserMapper;
 import org.project.ebankify_security.entity.Role;
 import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
-import org.project.ebankify_security.security.SecurityUser;
 import org.project.ebankify_security.service.AuthService;
 import org.project.ebankify_security.util.jwt.JwtUtils;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.HashSet;
 
 @Service
 @RequiredArgsConstructor
@@ -25,17 +32,20 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Override
-    public String login(AuthDTO authDTO) {
-        User user = dao.findUserByEmail(authDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("Error: User not found!"));
+    public AuthTokenResponseDTO login(AuthDTO authDTO) {
+        Authentication authentication;
+        authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authDTO.getEmail(), authDTO.getPassword()));
 
-        if (!passwordEncoder.matches(authDTO.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Error: Invalid password!");
-        }
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return jwtUtils.generateTokenFromUsername(new SecurityUser(user));
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+        String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+
+        return AuthTokenResponseDTO.builder().token(jwtToken).build();
     }
 
     @Override
@@ -47,6 +57,9 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new EntityNotFoundException("Default role not found!"));
         User user = userMapper.toUser(authDTO);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (user.getRoles() == null) {
+            user.setRoles(new HashSet<>());
+        }
         user.getRoles().add(role);
 
         dao.save(user);

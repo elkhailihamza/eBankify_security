@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -11,6 +12,7 @@ import java.util.Set;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "\"user\"")
 public class User {
 
@@ -24,6 +26,8 @@ public class User {
     private String email;
     private String password;
     private int age;
+    private double monthlyIncome = 0;
+    private int creditScore = 0;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -32,4 +36,13 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles = new HashSet<>();
+
+    @OneToMany(mappedBy = "owner")
+    private List<Account> accounts;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Invoice> invoices;
+
+    @OneToMany(mappedBy = "owner")
+    private List<Loan> loans;
 }

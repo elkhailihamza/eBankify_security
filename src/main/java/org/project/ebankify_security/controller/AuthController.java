@@ -3,7 +3,7 @@ package org.project.ebankify_security.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dto.AuthDTO;
-import org.project.ebankify_security.dto.AuthTokenResponse;
+import org.project.ebankify_security.dto.AuthTokenResponseDTO;
 import org.project.ebankify_security.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -19,10 +19,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthTokenResponse> login(@RequestBody @Valid AuthDTO authDTO) {
-        String token = authService.login(authDTO);
+    public ResponseEntity<AuthTokenResponseDTO> login(@RequestBody @Valid AuthDTO authDTO) {
+        AuthTokenResponseDTO tokenDTO = authService.login(authDTO);
         return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + token)
+                .header("Authorization", "Bearer " + tokenDTO.getToken())
                 .build();
     }
 
