@@ -1,6 +1,8 @@
 spring:
   application:
     name: ebankify_security
+    jwtSecret: Zm9vYmFyY29vbG9kZjY4ZGlvb3Bsd2FyZjNkZXVvY2lwdA==
+    jwtExpirationMs: 3600000
   datasource:
     url: jdbc:postgresql://localhost:5432/ebankify_security
     username: root
