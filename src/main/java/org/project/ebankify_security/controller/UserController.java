@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dto.request.UserReqDto;
 import org.project.ebankify_security.entity.User;
-import org.project.ebankify_security.exception.EntityDataConflictException;
+import org.project.ebankify_security.exception.EmailAlreadyInUseException;
 import org.project.ebankify_security.exception.UnexpectedErrorException;
 import org.project.ebankify_security.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class UserController {
             user = userService.saveUser(user);
             return ResponseEntity.status(HttpStatus.CREATED).body("User created: id - "+user.getId());
         }
-        throw new EntityDataConflictException("User with same email already exists!");
+        throw new EmailAlreadyInUseException("User with same email already exists!");
     }
 
     @PostMapping("/update/{userId}")

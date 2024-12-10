@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ExceptionDetails> handleDataConflictException(AuthenticationException ex, WebRequest request) {
+    public ResponseEntity<ExceptionDetails> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
         ExceptionDetails exceptionDetails = ExceptionDetails.builder()
                 .message(ex.getMessage())
                 .date(new Date())

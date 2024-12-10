@@ -11,7 +11,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ebankify_security.dto.request.UserReqDto;
 import org.project.ebankify_security.entity.User;
-import org.project.ebankify_security.exception.EntityDataConflictException;
+import org.project.ebankify_security.exception.EmailAlreadyInUseException;
 import org.project.ebankify_security.exception.UnexpectedErrorException;
 import org.project.ebankify_security.service.UserService;
 import org.project.ebankify_security.entity.Role;
@@ -72,7 +72,7 @@ public class UserControllerTest {
 
         try {
             userController.createNewUser(userReqDto);
-        } catch (EntityDataConflictException e) {
+        } catch (EmailAlreadyInUseException e) {
             assert e.getMessage().equals("User with same email already exists!");
         }
     }

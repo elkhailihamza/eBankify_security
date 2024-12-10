@@ -42,6 +42,7 @@ public class AccountController {
     @PostMapping("/create")
     public ResponseEntity<?> createNewAccount(HttpServletRequest request) {
         Long userId = (Long) request.getSession().getAttribute("AUTH.id");
+
         Optional<User> user = userService.findUserById(userId);
         if (user.isPresent()) {
             User existingUser = user.get();
