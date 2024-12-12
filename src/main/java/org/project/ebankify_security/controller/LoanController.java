@@ -37,30 +37,17 @@ public class LoanController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<?> requestLoan(@RequestBody LoanResDto loanResDto, HttpServletRequest request) {
-        Long userId = (Long) request.getSession(false).getAttribute("AUTH.id");
-        Loan loan = loanService.toLoan(loanResDto);
-        loan.setOwner(User.builder().id(userId).build());
-        loanService.saveLoan(loan);
-        return ResponseEntity.ok("Loan created");
+    public ResponseEntity<LoanDTO> requestLoan(@RequestBody LoanDTO loanDTO) {
+        return ResponseEntity.ok(loanService.requestLoan(loanDTO));
     }
 
     @GetMapping("/")
-    public ResponseEntity<?> viewUserLoan(HttpServletRequest request) {
-        Long userId = (Long) request.getSession(false).getAttribute("AUTH.id");
-        List<Loan> loans = loanService.getUserLoanHistory(userId);
-        List<LoanVM> loanVMs = loans.stream().map(loanService::getLoanToLoanResDto)
-                .map(LoanVM::new)
-                .toList();
-        return ResponseEntity.ok(loanVMs);
+    public ResponseEntity<List<LoanDTO>> viewUserLoans() {
+        return ResponseEntity.ok(loanService.viewUserLoans());
     }
 
     @GetMapping("/all")
     public ResponseEntity<?> viewAllLoans() {
-        List<Loan> loans = loanService.getLoanHistory();
-        List<LoanVM> loanVMs = loans.stream().map(loanService::getLoanToLoanResDto)
-                .map(LoanVM::new)
-                .toList();
-        return ResponseEntity.ok(loanVMs);
+        return ResponseEntity.ok(loanService.viewAllLoans());
     }
 }
