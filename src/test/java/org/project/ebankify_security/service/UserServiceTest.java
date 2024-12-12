@@ -6,19 +6,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.project.ebankify_security.dao.UserDAO;
-import org.project.ebankify_security.dto.request.UserReqDto;
-import org.project.ebankify_security.entity.User;
+import org.project.ebankify_security.dto.UserDTO;
+import org.project.ebankify_security.dto.mapper.UserMapper;
 import org.project.ebankify_security.entity.Role;
+import org.project.ebankify_security.entity.User;
+import org.project.ebankify_security.exception.EmailAlreadyInUseException;
+import org.project.ebankify_security.service.implementation.UserServiceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class UserServiceTest {
 
@@ -28,62 +28,72 @@ public class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder; // Mock for password encoding
 
-    @InjectMocks
-    private UserService userService;
+    @Mock
+    private UserMapper userMapper;
 
-    private UserReqDto userReqDto;
+    @InjectMocks
+    private UserServiceImpl userService;
+
+    private UserDTO userDTO;
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
         Role userRole = new Role();
         userRole.setName("USER");
-        userReqDto = new UserReqDto("John", "Doe", "john.doe@example.com", "password123", 25, Set.of(userRole));
+        userDTO = new UserDTO(1L, "John", "Doe", "john.doe@example.com", "password123", 25, 5000.0, 700);
     }
 
     @Test
-    public void testSaveUser() {
+    public void testCreateUser() {
         User user = new User();
         user.setId(1L);
-
         when(passwordEncoder.encode(any(String.class))).thenReturn("encodedPassword");
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(user);
+        when(userDao.existsUserByEmail(any(String.class))).thenReturn(false);
         when(userDao.save(any(User.class))).thenReturn(user);
+        when(userMapper.toUserDTO(any(User.class))).thenReturn(userDTO);
 
-        User convertedUser = userService.toUser(userReqDto); // Convert UserReqDto to User
-        User savedUser = userService.saveUser(convertedUser); // Save the converted User
-        assertNotNull(savedUser);
-        assertEquals(1L, savedUser.getId());
-        assertEquals("encodedPassword", savedUser.getPassword());
+        UserDTO createdUser = userService.createUser(userDTO);
+
+        assertNotNull(createdUser);
+        assertEquals(1L, createdUser.getId());
+        assertEquals("encodedPassword", createdUser.getPassword());
     }
 
     @Test
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
-    public void testFindUserById() {
+    public void testCreateUserWithEmailAlreadyExists() {
+        when(userDao.existsUserByEmail(any(String.class))).thenReturn(true);
+
+        Exception exception = assertThrows(EmailAlreadyInUseException.class, () -> userService.createUser(userDTO));
+
+        assertEquals("User with same email already exists!", exception.getMessage());
+    }
+
+    @Test
+    public void testModifyUser() {
+        User existingUser = new User();
+        existingUser.setId(1L);
+        when(userDao.findById(anyLong())).thenReturn(Optional.of(existingUser));
+
+        when(userMapper.toUser(any(UserDTO.class))).thenReturn(existingUser);
+        when(userMapper.toUserDTO(any(User.class))).thenReturn(userDTO);
+
+        UserDTO updatedUser = userService.modifyUser(userDTO);
+
+        assertNotNull(updatedUser);
+        assertEquals(1L, updatedUser.getId());
+    }
+
+    @Test
+    public void testDeleteUser() {
         User user = new User();
         user.setId(1L);
-
         when(userDao.findById(anyLong())).thenReturn(Optional.of(user));
 
-        Optional<User> userOpt = userService.findUserById(1L);
-        assertTrue(userOpt.isPresent());
-        assertEquals(1L, userOpt.get().getId());
-    }
+        userService.deleteUser(userDTO);
 
-    @Test
-    public void testUserExistsByEmail() {
-        when(userDao.existsUserByEmail("john.doe@example.com")).thenReturn(true);
-
-        boolean exists = userService.userExistsByEmail("john.doe@example.com");
-        assertTrue(exists);
-    }
-
-    @Test
-    public void testToUser() {
-        when(passwordEncoder.encode(any(String.class))).thenReturn("encodedPassword");
-
-        User user = userService.toUser(userReqDto);
-        assertNotNull(user);
-        assertEquals(userReqDto.getEmail(), user.getEmail());
-        assertEquals("encodedPassword", user.getPassword()); // Ensure password is encoded
+        // Verify that the delete method was called on the userDao
+        verify(userDao).delete(user);
     }
 }
