@@ -1,6 +1,7 @@
 package org.project.ebankify_security.dto.mapper;
 
 import org.mapstruct.Mapper;
+import org.project.ebankify_security.dto.TransactionDTO;
 import org.project.ebankify_security.dto.request.TransactionReqDto;
 import org.project.ebankify_security.dto.response.TransactionResDto;
 import org.project.ebankify_security.entity.Transaction;
@@ -9,6 +10,7 @@ import org.project.ebankify_security.entity.Transaction;
 public interface TransactionMapper {
 
     Transaction toTransaction(TransactionReqDto transactionReqDto);
-
     TransactionResDto getTransactionToTransactionResDto(Transaction transaction);
+    Transaction toTransaction(TransactionDTO transactionDTO);
+    TransactionDTO toTransactionDTO(Transaction transaction);
 }

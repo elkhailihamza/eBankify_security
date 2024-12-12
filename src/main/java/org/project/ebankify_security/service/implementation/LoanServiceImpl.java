@@ -1,7 +1,9 @@
 package org.project.ebankify_security.service.implementation;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dao.LoanDAO;
+import org.project.ebankify_security.dto.LoanDTO;
 import org.project.ebankify_security.dto.mapper.LoanMapper;
 import org.project.ebankify_security.dto.response.LoanResDto;
 import org.project.ebankify_security.entity.Loan;
@@ -9,7 +11,6 @@ import org.project.ebankify_security.service.LoanService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,21 +34,15 @@ public class LoanServiceImpl implements LoanService {
         return loanDao.findAllByOwner_Id(id);
     }
 
-    public Loan acceptLoan(Loan loan) {
+    public LoanDTO acceptLoan(LoanDTO loanDTO) {
+        Loan loan = loanDao.findById(loanDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Loan not found!"));
         loan.setApproved(true);
-        return saveLoan(loan);
+        return loanMapper.toLoanDTO(loanDao.save(loan));
     }
 
-    public Loan refuseLoan(Loan loan) {
+    public LoanDTO refuseLoan(LoanDTO loanDTO) {
+        Loan loan = loanDao.findById(loanDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Loan not found!"));
         loan.setApproved(false);
-        return saveLoan(loan);
-    }
-
-    public Optional<Loan> findById(long id) {
-        return loanDao.findById(id);
-    }
-
-    public Loan saveLoan(Loan loan) {
-        return loanDao.save(loan);
+        return loanMapper.toLoanDTO(loanDao.save(loan));
     }
 }

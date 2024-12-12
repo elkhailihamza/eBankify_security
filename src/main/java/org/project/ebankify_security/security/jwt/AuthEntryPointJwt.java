@@ -1,4 +1,4 @@
-package org.project.ebankify_security.util.jwt;
+package org.project.ebankify_security.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;

@@ -2,7 +2,7 @@ package org.project.ebankify_security.dto.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+import org.project.ebankify_security.dto.InvoiceDTO;
 import org.project.ebankify_security.dto.request.InvoiceReqDto;
 import org.project.ebankify_security.dto.response.InvoiceResDto;
 import org.project.ebankify_security.entity.Invoice;
@@ -16,4 +16,7 @@ public interface InvoiceMapper {
     Invoice toInvoice(InvoiceReqDto invoiceReqDto);
 
     InvoiceResDto getInvoiceToInvoiceResDto(Invoice invoice);
+
+    Invoice toInvoice(InvoiceDTO invoiceDTO);
+    InvoiceDTO toInvoiceDTO(Invoice invoice);
 }

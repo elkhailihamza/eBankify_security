@@ -41,4 +41,34 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(exceptionDetails, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(AccountConflictException.class)
+    public ResponseEntity<ExceptionDetails> handleAccountConflictException(AccountConflictException ex, WebRequest request) {
+        ExceptionDetails exceptionDetails = ExceptionDetails.builder()
+                .message(ex.getMessage())
+                .date(new Date())
+                .description(request.getDescription(false))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(EntityRulesViolationException.class)
+    public ResponseEntity<ExceptionDetails> handleEntityRulesViolationException(EntityRulesViolationException ex, WebRequest request) {
+        ExceptionDetails exceptionDetails = ExceptionDetails.builder()
+                .message(ex.getMessage())
+                .date(new Date())
+                .description(request.getDescription(false))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(TransactionFailedException.class)
+    public ResponseEntity<ExceptionDetails> handleTransactionFailedException(TransactionFailedException ex, WebRequest request) {
+        ExceptionDetails exceptionDetails = ExceptionDetails.builder()
+                .message(ex.getMessage())
+                .date(new Date())
+                .description(request.getDescription(false))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.CONFLICT);
+    }
 }

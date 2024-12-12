@@ -3,6 +3,7 @@ package org.project.ebankify_security.controller;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.project.ebankify_security.dto.LoanDTO;
 import org.project.ebankify_security.dto.response.LoanResDto;
 import org.project.ebankify_security.entity.Loan;
 import org.project.ebankify_security.entity.User;
@@ -22,25 +23,17 @@ public class LoanController {
     private final LoanService loanService;
 
     @PostMapping("/{loanId}/accept")
-    public ResponseEntity<?> acceptLoan(@PathVariable long loanId) {
-        Optional<Loan> loanOpt = loanService.findById(loanId);
-        if (loanOpt.isPresent()) {
-            Loan loan = loanOpt.get();
-            loanService.acceptLoan(loan);
-            return ResponseEntity.ok("Accepted loan!");
-        }
-        throw new EntityNotFoundException("Loan not found!");
+    public ResponseEntity<String> acceptLoan(@PathVariable long loanId) {
+        LoanDTO loanDTO = LoanDTO.builder().id(loanId).build();
+        loanService.acceptLoan(loanDTO);
+        return ResponseEntity.ok("Loan accepted successfully!");
     }
 
     @PostMapping("/{loanId}/refuse")
     public ResponseEntity<?> refuseLoan(@PathVariable long loanId) {
-        Optional<Loan> loanOpt = loanService.findById(loanId);
-        if (loanOpt.isPresent()) {
-            Loan loan = loanOpt.get();
-            loanService.refuseLoan(loan);
-            return ResponseEntity.ok("Refused loan!");
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Loan not found!");
+        LoanDTO loanDTO = LoanDTO.builder().id(loanId).build();
+        loanService.refuseLoan(loanDTO);
+        return ResponseEntity.ok("Loan refused!");
     }
 
     @PostMapping("/request")

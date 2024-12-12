@@ -1,19 +1,11 @@
 package org.project.ebankify_security.controller;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.project.ebankify_security.dto.request.UserReqDto;
-import org.project.ebankify_security.entity.User;
-import org.project.ebankify_security.exception.EmailAlreadyInUseException;
-import org.project.ebankify_security.exception.UnexpectedErrorException;
+import org.project.ebankify_security.dto.UserDTO;
 import org.project.ebankify_security.service.UserService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
@@ -23,39 +15,20 @@ public class UserController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createNewUser(@RequestBody UserReqDto userReqDto) {
-        if (!userService.userExistsByEmail(userReqDto.getEmail())) {
-            User user = userService.toUser(userReqDto);
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user = userService.saveUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User created: id - "+user.getId());
-        }
-        throw new EmailAlreadyInUseException("User with same email already exists!");
+    public ResponseEntity<UserDTO> createNewUser(@RequestBody UserDTO userDTO) {
+        return ResponseEntity.ok(userService.createUser(userDTO));
     }
 
     @PostMapping("/update/{userId}")
-    public ResponseEntity<String> modifyUser(@PathVariable long userId, @RequestBody UserReqDto userReqDto) {
-        Optional<User> userOpt = userService.findUserById(userId);
-        if (userOpt.isPresent() && !userService.userExistsByEmail(userReqDto.getEmail())) {
-            User existingUser = userOpt.get();
-            User user = userService.toUser(userReqDto);
-            user.setId(existingUser.getId());
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
-            user = userService.saveUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User modified: id - "+user.getId());
-        }
-        throw new UnexpectedErrorException("An error has occurred!");
+    public ResponseEntity<UserDTO> modifyUser(@PathVariable long userId, @RequestBody UserDTO userDTO) {
+        userDTO.setId(userId);
+        return ResponseEntity.ok(userService.modifyUser(userDTO));
     }
 
     @PostMapping("/delete")
-    public ResponseEntity<String> deleteUser(HttpServletRequest request) {
-        Long userId = (Long) request.getAttribute("userId");
-        Optional<User> userOpt = userService.findUserById(userId);
-        if (userOpt.isPresent()) {
-            userService.deleteUser(userOpt.get());
-            return ResponseEntity.ok("Deleted User!");
-        }
-        throw new EntityNotFoundException("User not found!");
+    public ResponseEntity<String> deleteUser(UserDTO userDTO) {
+        userService.deleteUser(userDTO);
+        return ResponseEntity.ok("Deleted user!");
     }
 
 }

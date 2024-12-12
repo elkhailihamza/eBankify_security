@@ -12,6 +12,7 @@ import java.util.UUID;
 @Repository
 public interface AccountDAO extends JpaRepository<Account, UUID> {
     boolean existsAccountByAccountNumber(String accountNumber);
-    List<Account> findAccountsByOwner(User owner);
+    List<Account> findAccountsByOwner_Id(long id);
+    List<Account> findAccountsByOwnerEmail(String email);
     Optional<Account> findAccountByAccountNumber(String accountNumber);
 }

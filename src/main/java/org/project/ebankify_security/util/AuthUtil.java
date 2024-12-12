@@ -1,4 +1,4 @@
-package org.project.ebankify_security.util.auth;
+package org.project.ebankify_security.util;
 
 import org.project.ebankify_security.security.SecurityUser;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -18,11 +18,19 @@ public class AuthUtil {
         throw new AuthenticationCredentialsNotFoundException("User not authenticated!");
     }
 
-    public static String getAuthenticationUsername() {
+    public static Object getAuthenticationUsername() {
         SecurityUser securityUser = getAuthenticatedUser();
         if (securityUser != null && securityUser.getUsername() != null) {
             return securityUser.getUsername();
         }
         throw new UsernameNotFoundException("Email not found!");
+    }
+
+    public static Object getAuthenticationId() {
+        SecurityUser securityUser = getAuthenticatedUser();
+        if (securityUser != null) {
+            return securityUser.getId();
+        }
+        throw new RuntimeException("User not authenticated!"); // change to a handled runtime exception
     }
 }

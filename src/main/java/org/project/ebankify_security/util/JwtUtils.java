@@ -1,4 +1,4 @@
-package org.project.ebankify_security.util.jwt;
+package org.project.ebankify_security.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

@@ -12,7 +12,7 @@ import org.project.ebankify_security.entity.Role;
 import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
 import org.project.ebankify_security.service.AuthService;
-import org.project.ebankify_security.util.jwt.JwtUtils;
+import org.project.ebankify_security.util.JwtUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

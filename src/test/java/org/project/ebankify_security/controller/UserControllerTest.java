@@ -1,7 +1,6 @@
 package org.project.ebankify_security.controller;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,22 +8,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.project.ebankify_security.dto.request.UserReqDto;
-import org.project.ebankify_security.entity.User;
+import org.project.ebankify_security.dto.UserDTO;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
-import org.project.ebankify_security.exception.UnexpectedErrorException;
 import org.project.ebankify_security.service.UserService;
-import org.project.ebankify_security.entity.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,42 +28,40 @@ public class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
-    @Mock
-    private Role role;
-
-    private UserReqDto userReqDto;
+    private UserDTO userDTO;
 
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        role = new Role();
-        role.setName("USER");
-        Set<Role> roles = new HashSet<>();
-        roles.add(role);
-        userReqDto = new UserReqDto("John", "Doe", "john.doe@example.com", "password123", 25, roles);
+        userDTO = new UserDTO();
+        userDTO.setId(1L);
+        userDTO.setName("John");
+        userDTO.setSurname("Doe");
+        userDTO.setEmail("john.doe@example.com");
+        userDTO.setPassword("password123");
+        userDTO.setAge(25);
+        userDTO.setMonthlyIncome(5000.0);
+        userDTO.setCreditScore(700);
     }
 
     @Test
     public void testCreateNewUser() {
-        User user = new User();
-        user.setId(1L);
+        when(userService.createUser(any(UserDTO.class))).thenReturn(userDTO);
 
-        when(userService.userExistsByEmail(userReqDto.getEmail())).thenReturn(false);
-        when(userService.saveUser(any(User.class))).thenReturn(user);
+        ResponseEntity<UserDTO> response = userController.createNewUser(userDTO);
 
-        ResponseEntity<String> response = userController.createNewUser(userReqDto);
-
-        verify(userService, times(1)).saveUser(any(User.class));
-        assert response.getStatusCode() == HttpStatus.CREATED;
-        assert Objects.equals(response.getBody(), "User created: id - 1");
+        verify(userService, times(1)).createUser(any(UserDTO.class));
+        assert response.getStatusCode() == HttpStatus.OK;
+        assert response.getBody() != null;
+        assert response.getBody().getId() == 1L;
     }
 
     @Test
     public void testCreateNewUser_Conflict() {
-        when(userService.userExistsByEmail(userReqDto.getEmail())).thenReturn(true);
+        when(userService.createUser(any(UserDTO.class))).thenThrow(new EmailAlreadyInUseException("User with same email already exists!"));
 
         try {
-            userController.createNewUser(userReqDto);
+            userController.createNewUser(userDTO);
         } catch (EmailAlreadyInUseException e) {
             assert e.getMessage().equals("User with same email already exists!");
         }
@@ -79,53 +69,44 @@ public class UserControllerTest {
 
     @Test
     public void testModifyUser() {
-        User existingUser = new User();
-        existingUser.setId(1L);
+        when(userService.modifyUser(any(UserDTO.class))).thenReturn(userDTO);
 
-        when(userService.findUserById(anyLong())).thenReturn(Optional.of(existingUser));
-        when(userService.userExistsByEmail(userReqDto.getEmail())).thenReturn(false);
-        when(userService.saveUser(any(User.class))).thenReturn(existingUser);
+        ResponseEntity<UserDTO> response = userController.modifyUser(1L, userDTO);
 
-        ResponseEntity<String> response = userController.modifyUser(1L, userReqDto);
-
-        assert response.getStatusCode() == HttpStatus.CREATED;
-        assert Objects.equals(response.getBody(), "User modified: id - 1");
+        verify(userService, times(1)).modifyUser(any(UserDTO.class));
+        assert response.getStatusCode() == HttpStatus.OK;
+        assert response.getBody() != null;
+        assert response.getBody().getId() == 1L;
     }
 
     @Test
-    public void testModifyUser_UnexpectedError() {
-        when(userService.findUserById(anyLong())).thenReturn(Optional.empty());
+    public void testModifyUser_NotFound() {
+        when(userService.modifyUser(any(UserDTO.class))).thenThrow(new EntityNotFoundException("User not found!"));
 
         try {
-            userController.modifyUser(1L, userReqDto);
-        } catch (UnexpectedErrorException e) {
-            assert e.getMessage().equals("An error has occurred!");
+            userController.modifyUser(1L, userDTO);
+        } catch (EntityNotFoundException e) {
+            assert e.getMessage().equals("User not found!");
         }
     }
 
     @Test
     public void testDeleteUser() {
-        User user = new User();
-        user.setId(1L);
-        when(userService.findUserById(1L)).thenReturn(Optional.of(user));
+        doNothing().when(userService).deleteUser(any(UserDTO.class));
 
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        when(request.getParameter("userId")).thenReturn("1"); // Mocking userId retrieval
+        ResponseEntity<String> response = userController.deleteUser(userDTO);
 
-        // Act
-        ResponseEntity<String> response = userController.deleteUser(request);
-
-        // Assert
+        verify(userService, times(1)).deleteUser(any(UserDTO.class));
         assert response.getStatusCode() == HttpStatus.OK;
-        assert Objects.equals(response.getBody(), "Deleted User!");
+        assert Objects.equals(response.getBody(), "Deleted user!");
     }
 
     @Test
     public void testDeleteUser_NotFound() {
-        when(userService.findUserById(anyLong())).thenReturn(Optional.empty());
+        doThrow(new EntityNotFoundException("User not found!")).when(userService).deleteUser(any(UserDTO.class));
 
         try {
-            userController.deleteUser(mock(HttpServletRequest.class));
+            userController.deleteUser(userDTO);
         } catch (EntityNotFoundException e) {
             assert e.getMessage().equals("User not found!");
         }
