@@ -3,6 +3,7 @@ package org.project.ebankify_security.service.implementation;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dao.AccountDAO;
+import org.project.ebankify_security.dao.UserDAO;
 import org.project.ebankify_security.dto.AccountDTO;
 import org.project.ebankify_security.dto.mapper.AccountMapper;
 import org.project.ebankify_security.entity.Account;
@@ -11,7 +12,6 @@ import org.project.ebankify_security.entity.type.AccountStatus;
 import org.project.ebankify_security.exception.AccountConflictException;
 import org.project.ebankify_security.exception.InvalidFundsException;
 import org.project.ebankify_security.service.AccountService;
-import org.project.ebankify_security.service.UserService;
 import org.project.ebankify_security.util.AccountUtil;
 import org.project.ebankify_security.util.AuthUtil;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import java.util.Optional;
 public class AccountServiceImpl implements AccountService {
     private final AccountDAO accountDao;
     private final AccountMapper accountMapper;
-    private final UserService userService;
+    private final UserDAO userDao;
 
     public void saveAccount(AccountDTO accountDTO) {
         Account account = accountDao.findAccountByAccountNumber(accountDTO.getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Account not found!"));
@@ -40,7 +40,7 @@ public class AccountServiceImpl implements AccountService {
     public AccountDTO createAccount(AccountDTO accountDTO) {
         Long userId = (Long) AuthUtil.getAuthenticationId();
 
-        User user = userService.findUserById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
+        User user = userDao.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
         int creditScore = user.getCreditScore();
         if (creditScore < 600) {
             throw new InvalidFundsException("Credit Score too low! \nNeeds to be 600 or more.");

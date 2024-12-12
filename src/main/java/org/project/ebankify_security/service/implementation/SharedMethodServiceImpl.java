@@ -1,6 +1,6 @@
 package org.project.ebankify_security.service.implementation;
 
-import org.project.ebankify_security.exception.UnexpectedErrorException;
+import org.project.ebankify_security.exception.EntityRulesViolationException;
 import org.project.ebankify_security.service.SharedMethodService;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +19,15 @@ public class SharedMethodServiceImpl implements SharedMethodService {
                 if (value != null) {
                     Field entityField = entity.getClass().getDeclaredField(dtoField.getName());
                     entityField.setAccessible(true);
-                    entityField.set(entity, value);
+
+                    if (entityField.getType().isAssignableFrom(dtoField.getType())) {
+                        entityField.set(entity, value);
+                    } else {
+                        throw new EntityRulesViolationException("Field type mismatch for " + dtoField.getName());
+                    }
                 }
             } catch (NoSuchFieldException | IllegalAccessException e) {
-                throw new UnexpectedErrorException("Unknown or wrong fields found!");
+                throw new EntityRulesViolationException("Error while merging fields: " + e.getMessage());
             }
         }
     }
