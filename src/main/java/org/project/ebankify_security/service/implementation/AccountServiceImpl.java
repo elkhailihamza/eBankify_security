@@ -17,7 +17,6 @@ import org.project.ebankify_security.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -57,11 +56,6 @@ public class AccountServiceImpl implements AccountService {
         return accountDTOs.stream()
                 .map(accountMapper::toAccountDTO)
                 .toList();
-    }
-
-    public Optional<Account> fetchAccountByAccountNumber(AccountDTO accountDTO) {
-        String accountNumber = accountDTO.getAccountNumber();
-        return accountDao.findAccountByAccountNumber(accountNumber);
     }
 
     private String getUniqueAccountNum(int length) {
