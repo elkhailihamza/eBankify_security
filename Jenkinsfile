@@ -10,7 +10,6 @@ node {
         }
 
         stage('Build Docker Image') {
-            sh 'docker --version'
             sh "docker build -t ebankify-deploy:${dockerImageTag} ."
         }
 
