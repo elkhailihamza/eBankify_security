@@ -2,7 +2,6 @@ package org.project.ebankify_security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.security.SecurityUserService;
-import org.project.ebankify_security.util.JwtUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 public class ApplicationConfig {
     private final SecurityUserService securityUserService;
-    private final JwtUtils jwtUtils;
 
     @Bean
     public AuthenticationProvider authenticationProvider() {

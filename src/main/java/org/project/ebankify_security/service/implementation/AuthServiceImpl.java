@@ -12,7 +12,6 @@ import org.project.ebankify_security.entity.Role;
 import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
 import org.project.ebankify_security.service.AuthService;
-import org.project.ebankify_security.util.JwtUtils;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -30,7 +29,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserDAO dao;
     private final RoleDAO roleDao;
     private final UserMapper userMapper;
-    private final JwtUtils jwtUtils;
+    // private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
@@ -43,9 +42,10 @@ public class AuthServiceImpl implements AuthService {
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-        String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
+        // String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
 
-        return AuthTokenResponseDTO.builder().token(jwtToken).build();
+        // return AuthTokenResponseDTO.builder().token(jwtToken).build();
+        return null;
     }
 
     @Override

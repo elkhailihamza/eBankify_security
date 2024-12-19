@@ -17,7 +17,6 @@ import org.project.ebankify_security.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +24,7 @@ public class AccountServiceImpl implements AccountService {
     private final AccountDAO accountDao;
     private final AccountMapper accountMapper;
     private final UserDAO userDao;
+    private final AuthUtil authUtil;
 
     public void saveAccount(AccountDTO accountDTO) {
         Account account = accountDao.findAccountByAccountNumber(accountDTO.getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Account not found!"));
@@ -37,8 +37,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountDTO createAccount(AccountDTO accountDTO) {
-        Long userId = (Long) AuthUtil.getAuthenticationId();
+    public AccountDTO createAccount() {
+        Long userId = (Long) authUtil.getAuthenticationId();
 
         User user = userDao.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found!"));
         int creditScore = user.getCreditScore();
@@ -53,15 +53,10 @@ public class AccountServiceImpl implements AccountService {
     }
 
     public List<AccountDTO> fetchAllUserAccounts() {
-        List<Account> accountDTOs = accountDao.findAccountsByOwner_Id((Long) AuthUtil.getAuthenticationId());
+        List<Account> accountDTOs = accountDao.findAccountsByOwner_Id((Long) authUtil.getAuthenticationId());
         return accountDTOs.stream()
                 .map(accountMapper::toAccountDTO)
                 .toList();
-    }
-
-    public Optional<Account> fetchAccountByAccountNumber(AccountDTO accountDTO) {
-        String accountNumber = accountDTO.getAccountNumber();
-        return accountDao.findAccountByAccountNumber(accountNumber);
     }
 
     private String getUniqueAccountNum(int length) {

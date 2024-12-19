@@ -11,6 +11,7 @@ import org.project.ebankify_security.service.LoanService;
 import org.project.ebankify_security.dto.vm.LoanVM;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public class LoanController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasRole('ROLE_EMPLOYEE')")
     public ResponseEntity<?> viewAllLoans() {
         return ResponseEntity.ok(loanService.viewAllLoans());
     }
