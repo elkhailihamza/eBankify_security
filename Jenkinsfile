@@ -13,10 +13,11 @@ node {
             sh "docker build -t ebankify-deploy:${dockerImageTag} ."
         }
 
-        stage ('Deploy docker') {
+        stage('Deploy Docker') {
             echo "Docker Image Tag Name: ${dockerImageTag}"
             sh "docker stop ebankify-deploy || true && docker rm ebankify-deploy || true"
-            sh "docker run --name ebankify-deploy -d -p 5000:5000 ebankify-deploy:${env.BUILD_NUMBER}"
+            // Updated port to match the Dockerfile (port 8083)
+            sh "docker run --name ebankify-deploy -d -p 8083:8083 ebankify-deploy:${env.BUILD_NUMBER}"
         }
     } catch (e) {
         error("Pipeline failed: ${e.message}")
