@@ -14,7 +14,7 @@ node {
         }
 
         stage ('Deploy docker') {
-            echo "Docker Image Tag Name: ${dockerImageTag}",
+            echo "Docker Image Tag Name: ${dockerImageTag}"
             sh "docker stop ebankify-deploy || true && docker rm ebankify-deploy || true"
             sh "docker run --name ebankify-deploy -d -p 5000:5000 ebankify-deploy:${env.BUILD_NUMBER}"
         }
