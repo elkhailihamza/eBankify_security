@@ -18,6 +18,7 @@ import java.util.List;
 public class LoanServiceImpl implements LoanService {
     private final LoanDAO loanDao;
     private final LoanMapper loanMapper;
+    private final AuthUtil authUtil;
 
     @Override
     public LoanDTO acceptLoan(LoanDTO loanDTO) {
@@ -35,7 +36,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public LoanDTO requestLoan(LoanDTO loanDTO) {
-        Long userId = (Long) AuthUtil.getAuthenticationId();
+        Long userId = (Long) authUtil.getAuthenticationId();
         Loan loan = loanMapper.toLoan(loanDTO);
         loan.setOwner(User.builder().id(userId).build());
         return loanMapper.toLoanDTO(loanDao.save(loan));
@@ -43,7 +44,7 @@ public class LoanServiceImpl implements LoanService {
 
     @Override
     public List<LoanDTO> viewUserLoans() {
-        Long userId = (Long) AuthUtil.getAuthenticationId();
+        Long userId = (Long) authUtil.getAuthenticationId();
         List<Loan> loans = loanDao.findAllByOwner_Id(userId);
         return loans.stream()
                 .map(loanMapper::toLoanDTO)

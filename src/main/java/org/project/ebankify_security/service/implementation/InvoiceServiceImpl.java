@@ -16,10 +16,11 @@ import java.util.List;
 public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceDAO invoiceDao;
     private final InvoiceMapper invoiceMapper;
+    private final AuthUtil authUtil;
 
     @Override
     public List<InvoiceDTO> fetchAllInvoice() {
-        List<Invoice> invoices = invoiceDao.findAllByOwner_Id((Long) AuthUtil.getAuthenticationId());
+        List<Invoice> invoices = invoiceDao.findAllByOwner_Id((Long) authUtil.getAuthenticationId());
         return invoices.stream()
                 .map(invoiceMapper::toInvoiceDTO)
                 .toList();

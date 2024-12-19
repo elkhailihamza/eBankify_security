@@ -2,11 +2,9 @@ package org.project.ebankify_security.config;
 
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.security.jwt.JwtAuthenticationConverter;
-import org.project.ebankify_security.security.jwt.JwtAuthenticationFilter;
 import org.project.ebankify_security.security.jwt.AuthEntryPointJwt;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,7 +12,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class WebSecurityConfig {
     private final AuthEntryPointJwt unauthorizedHandler;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
     @Bean
@@ -38,12 +34,9 @@ public class WebSecurityConfig {
         http.headers(headers -> headers
                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
         );
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.csrf(AbstractHttpConfigurer::disable);
         http.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwtConfigurer -> {
-                    jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter);
-                }));
+                .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter)));
         return http.build();
     }
 }

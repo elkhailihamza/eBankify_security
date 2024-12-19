@@ -29,10 +29,10 @@ public class TransactionServiceImpl implements TransactionService {
     private final TransactionDAO transactionDao;
     private final TransactionMapper transactionMapper;
     private final AccountDAO accountDao;
-    private final UserDAO userDao;
+    private final AuthUtil authUtil;
 
     public List<TransactionDTO> getTransactionHistory() {
-        long userId = (Long) AuthUtil.getAuthenticationId();
+        long userId = (Long) authUtil.getAuthenticationId();
         User user = User.builder().id(userId).build();
         List<Transaction> transactions = transactionDao.findUserTransactionHistory(user);
         return transactions.stream()
@@ -50,7 +50,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
-        Long userId = (Long) AuthUtil.getAuthenticationId();
+        Long userId = (Long) authUtil.getAuthenticationId();
         Transaction transaction = transactionMapper.toTransaction(transactionDTO);
         Account srcAccount = accountDao.findAccountByAccountNumber(transaction.getSourceAccount().getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Source account not found!"));
         Account destAccount = accountDao.findAccountByAccountNumber(transaction.getDestinationAccount().getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Destination account not found!"));

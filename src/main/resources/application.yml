@@ -1,8 +1,14 @@
+server:
+  port: 8081
+  ssl:
+    key-store: classpath:keystore.p12
+    key-store-password: mL6o2HdswC9rZdy1gOdOagDrHipdDlMQ
+    key-store-type: PKCS12
+    key-alias: ebankify
+
 spring:
   application:
     name: ebankify_security
-    jwtSecret: Zm9vYmFyY29vbG9kZjY4ZGlvb3Bsd2FyZjNkZXVvY2lwdA==
-    jwtExpirationMs: 3600000
   datasource:
     url: jdbc:postgresql://localhost:5432/ebankify_security
     username: root
@@ -22,7 +28,13 @@ jwt:
   auth:
     converter:
       resource-id: ebankify-rest-api
-      principal-name-val: "preferred_username"
+      principal-name-val: "email"
 
-server:
-  port: 8081
+keycloak:
+  realm: ebankify
+  auth-server-url: http://localhost:8080/auth
+  resource: spring-boot-client
+  credentials:
+    secret: mL6o2HdswC9rZdy1gOdOagDrHipdDlMQ
+  bearer-only: true
+  use-resource-role-mappings: true

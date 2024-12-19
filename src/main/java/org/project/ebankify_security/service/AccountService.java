@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface AccountService {
     void deleteAccount(AccountDTO accountDTO);
-    AccountDTO createAccount(AccountDTO accountDTO);
+    AccountDTO createAccount();
     List<AccountDTO> fetchAllUserAccounts();
     String deactivateAccount(AccountDTO accountDTO);
     AccountDTO fetchCertainAccount(AccountDTO accountDTO);
