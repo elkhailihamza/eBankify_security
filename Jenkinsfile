@@ -1,28 +1,56 @@
-node {
-    def WORKSPACE = "/var/lib/jenkins/workspace/ebankify-deploy"
-    def dockerImageTag = "ebankify-deploy${env.BUILD_NUMBER}"
+pipeline {
+    agent any
 
-    try {
+    environment {
+        WORKSPACE = "/var/lib/jenkins/workspace/ebankify-deploy"
+        dockerImageTag = "ebankify-deploy${env.BUILD_NUMBER}"
+    }
+
+    stages {
         stage('Clone Repo') {
-            git url: 'https://github.com/elkhailihamza/eBankify_security',
-                credentialsId: 'github-credentials',
-                branch: 'develop'
+            steps {
+                git url: 'https://github.com/elkhailihamza/eBankify_security',
+                    credentialsId: 'github-credentials',
+                    branch: 'develop'
+            }
         }
 
         stage('Build Docker Image') {
-            sh "docker build -t ebankify-deploy:${dockerImageTag} ."
+            steps {
+                script {
+                    // Using the Docker plugin to build the image
+                    docker.build("ebankify-deploy:${dockerImageTag}")
+                }
+            }
         }
 
         stage('Deploy Docker') {
-            echo "Docker Image Tag Name: ${dockerImageTag}"
-            sh "docker stop ebankify-deploy || true && docker rm ebankify-deploy || true"
-            sh "docker run --name ebankify-deploy -d -p 8083:8083 ebankify-deploy:${env.BUILD_NUMBER}"
+            steps {
+                script {
+                    echo "Docker Image Tag Name: ${dockerImageTag}"
+                    
+                    // Use Docker plugin to stop and remove the container if it exists
+                    def container = docker.image("ebankify-deploy:${dockerImageTag}")
+                    container.remove() // Removes the existing container if it exists
+
+                    // Run the new Docker container with the specified tag
+                    container.run('-d -p 8083:8083')
+                }
+            }
         }
-    } catch (e) {
-        error("Pipeline failed: ${e.message}")
-    } finally {
-        stage('Cleanup') {
-            sh 'docker system prune -f'
+    }
+
+    post {
+        failure {
+            script {
+                error("Pipeline failed")
+            }
+        }
+        always {
+            script {
+                // Clean up unused Docker resources after the pipeline
+                sh 'docker system prune -f'
+            }
         }
     }
 }
