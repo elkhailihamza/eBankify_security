@@ -1,0 +1,38 @@
+services:
+  app:
+    build:
+      context: .   # Build the app container from the current directory
+      dockerfile: Dockerfile  # Dockerfile that includes the multi-stage build
+    ports:
+      - "8081:8081"  # Expose port 8081 for the app container (SSL enabled)
+    environment:
+      - DB_HOST=db  # Database host as the service name of the db container
+      - DB_PORT=5432  # PostgreSQL default port
+      - DB_NAME=ebankify_security  # Database name
+      - DB_USER=root  # Database user for PostgreSQL
+      - DB_PASSWORD=";(.314Luiv./"  # Database password
+      - DB_URL=jdbc:postgresql://db:5432/ebankify_security  # Database URL
+      - SPRING_APPLICATION_NAME=ebankify_security  # Spring application name
+      - SPRING_SSL_KEY_STORE=classpath:keystore.p12  # SSL keystore path
+      - SPRING_SSL_KEY_STORE_PASSWORD=mL6o2HdswC9rZdy1gOdOagDrHipdDlMQ  # SSL keystore password
+      - SPRING_SSL_KEY_STORE_TYPE=PKCS12  # Keystore type
+      - SPRING_SSL_KEY_ALIAS=ebankify  # Key alias for SSL
+    depends_on:
+      - db  # Ensure the db container starts before the app container
+    networks:
+      - mynetwork
+
+  db:
+    image: postgres:latest  # Use the official PostgreSQL image
+    environment:
+      - POSTGRES_USER=root  # Set the DB user for PostgreSQL
+      - POSTGRES_PASSWORD=";(.314Luiv./"  # Set the DB password
+      - POSTGRES_DB=ebankify_security  # Create a DB on startup
+    ports:
+      - "5432:5432"  # Expose PostgreSQL's default port
+    networks:
+      - mynetwork  # Ensure the db is on the same network as the app
+
+networks:
+  mynetwork:
+    driver: bridge  # Define a network for all containers to communicate
