@@ -1,5 +1,10 @@
+FROM jenkins/jenkins:lts AS build
+USER root
+RUN apt-get update
+RUN curl -sSL https://get.docker.com/ | sh
+
 # Build stage using Maven 3.9.9 and Java 17
-FROM maven:3.9.9 AS build
+FROM maven:3.9.9
 
 # Install OpenJDK 17
 RUN apt-get update && apt-get install -y openjdk-17-jdk
