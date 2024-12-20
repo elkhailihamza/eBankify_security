@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         WORKSPACE = "/var/lib/jenkins/workspace/ebankify-deploy"
-        dockerImageTag = "ebankify-deploy${env.BUILD_NUMBER}"
+        dockerImageTag = "ebankify-app:${env.BUILD_NUMBER}" // Match Dockerfile naming
+        containerName = "ebankify-container-${env.BUILD_NUMBER}" // Generate unique container name
     }
 
     stages {
@@ -18,8 +19,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Using the Docker plugin to build the image
-                    docker.build("ebankify-deploy:${dockerImageTag}")
+                    // Build the Docker image using the correct context (workspace directory)
+                    docker.build("${dockerImageTag}", ".")
                 }
             }
         }
@@ -27,14 +28,20 @@ pipeline {
         stage('Deploy Docker') {
             steps {
                 script {
-                    echo "Docker Image Tag Name: ${dockerImageTag}"
-                    
-                    // Use Docker plugin to stop and remove the container if it exists
-                    def container = docker.image("ebankify-deploy:${dockerImageTag}")
-                    container.remove() // Removes the existing container if it exists
+                    echo "Deploying Docker Image: ${dockerImageTag}"
 
-                    // Run the new Docker container with the specified tag
-                    container.run('-d -p 8083:8083')
+                    // Stop and remove the existing container if it exists, using the dynamic container name
+                    sh """
+                        if [ "$(docker ps -q -f name=${containerName})" ]; then
+                            docker stop ${containerName}
+                            docker rm ${containerName}
+                        fi
+                    """
+
+                    // Run the newly built Docker image with the dynamic container name
+                    sh """
+                        docker run -d --name ${containerName} -p 8083:8083 ${dockerImageTag}
+                    """
                 }
             }
         }
@@ -48,7 +55,7 @@ pipeline {
         }
         always {
             script {
-                // Clean up unused Docker resources after the pipeline
+                // Clean up unused Docker resources
                 sh 'docker system prune -f'
             }
         }
