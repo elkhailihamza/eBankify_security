@@ -32,7 +32,7 @@ pipeline {
 
                     // Stop and remove the existing container if it exists, using the dynamic container name
                     sh """
-                        if [ "$(docker ps -q -f name=${containerName})" ]; then
+                        if [ "\$(docker ps -q -f name=${containerName})" ]; then
                             docker stop ${containerName}
                             docker rm ${containerName}
                         fi
