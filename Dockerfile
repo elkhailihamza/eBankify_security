@@ -1,31 +1,17 @@
-FROM jenkins/jenkins:lts AS build
-USER root
-RUN apt-get update
-RUN curl -sSL https://get.docker.com/ | sh
-
-# Build stage using Maven 3.9.9 and Java 17
-FROM maven:3.9.9
-
-# Install OpenJDK 17
-RUN apt-get update && apt-get install -y openjdk-17-jdk
-
-RUN curl -fsSLO https://get.docker.com/builds/Linux/x86_64/docker-17.04.0-ce.tgz \
-  && tar xzvf docker-17.04.0-ce.tgz \
-  && mv docker/docker /usr/local/bin \
-  && rm -r docker docker-17.04.0-ce.tgz
+# Build stage using Maven
+FROM maven:3.9.9 AS build
 
 WORKDIR /opt/app
-
 COPY ./ /opt/app
-
 RUN mvn clean install -DskipTests
 
-# Run stage with OpenJDK 17
+# Run stage using OpenJDK
 FROM openjdk:17-jdk-alpine
 
-COPY --from=build /opt/app/target/*.jar app.jar
+WORKDIR /app
+COPY --from=build /opt/app/target/ebankify_security-0.0.1-SNAPSHOT.jar app.jar
 
-ENV PORT 8083
-EXPOSE $PORT
+ENV PORT=8083
+EXPOSE 8083
 
 ENTRYPOINT ["java", "-jar", "-Xmx1024M", "-Dserver.port=${PORT}", "app.jar"]
