@@ -1,9 +1,9 @@
 pipeline {
     agent any
     tools {
-        maven: 'maven'
-        jdk: 'jdk-17'
-        docker: 'docker'
+        maven 'maven'
+        jdk 'jdk-17'
+        dockerTool 'docker'
     }
 
     environment {
