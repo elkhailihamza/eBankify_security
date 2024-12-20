@@ -53,11 +53,5 @@ pipeline {
                 error("Pipeline failed")
             }
         }
-        always {
-            script {
-                // Clean up unused Docker resources
-                sh 'docker system prune -f'
-            }
-        }
     }
 }
