@@ -3,7 +3,6 @@ pipeline {
     tools {
         maven 'maven'
         jdk 'jdk-17'
-        dockerTool 'docker'
     }
 
     environment {
@@ -48,15 +47,19 @@ pipeline {
         stage('Start Database') {
             steps {
                 script {
-                    echo "Starting database container: ${DB_CONTAINER}"
-                    // Start the database container and attach it to the network
                     sh """
+                        # Remove existing container if it exists
+                        docker rm -f ${DB_CONTAINER} || true
+
                         docker run -d --name ${DB_CONTAINER} \
                             --network cicd-network \
+                            --network-alias postgres \
                             -e POSTGRES_USER=admin \
                             -e POSTGRES_PASSWORD=admin \
                             -e POSTGRES_DB=main_db \
                             -p 5434:5432 postgres:15
+
+                        sleep 10
                     """
                 }
             }
@@ -78,9 +81,9 @@ pipeline {
                     echo "Running SonarQube analysis"
                     withSonarQubeEnv('sonarqube') {
                         sh """
-                            mvn clean compile sonar:sonar \
+                            mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                                -Dsonar.java.binaries=target/classes
+                                -Dsonar.java.binaries=target/classes \
                         """
                     }
                 }
@@ -104,7 +107,7 @@ pipeline {
                     sh """
                         docker run -d --name ${containerName} \
                             --network cicd-network \
-                            -e SPRING_DATASOURCE_URL=jdbc:postgresql://ebankify-db:5432/main_db \
+                            -e SPRING_DATASOURCE_URL=jdbc:postgresql://172.19.0.2:5432/main_db \
                             -e SPRING_DATASOURCE_USERNAME=admin \
                             -e SPRING_DATASOURCE_PASSWORD=admin \
                             -p 8083:8083 ${dockerImageTag}
