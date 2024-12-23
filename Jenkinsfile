@@ -48,18 +48,15 @@ pipeline {
         stage('Start Database') {
             steps {
                 script {
-                    // Check and start the database container and attach it to the network
+                    echo "Starting database container: ${DB_CONTAINER}"
+                    // Start the database container and attach it to the network
                     sh """
-                        if [ -z "$(docker ps -a -q -f name=${DB_CONTAINER})" ]; then
-                            echo "Starting database container: ${DB_CONTAINER}"
-
-                            docker run -d --name ${DB_CONTAINER} \
+                        docker run -d --name ${DB_CONTAINER} \
                             --network cicd-network \
                             -e POSTGRES_USER=admin \
                             -e POSTGRES_PASSWORD=admin \
                             -e POSTGRES_DB=main_db \
                             -p 5434:5432 postgres:15
-                        fi
                     """
                 }
             }
@@ -121,22 +118,6 @@ pipeline {
         failure {
             script {
                 error("Pipeline failed")
-                echo "Performing cleanup ..."
-                // Remove the database container to ensure a fresh start for the next pipeline run
-                sh """
-                    if [ "\$(docker ps -a -q -f name=${DB_CONTAINER})" ]; then
-                        docker stop ${DB_CONTAINER} || true
-                        docker rm ${DB_CONTAINER} || true
-                    fi
-                """
-
-                // Optionally remove the application container
-                sh """
-                    if [ "\$(docker ps -a -q -f name=${containerName})" ]; then
-                        docker stop ${containerName} || true
-                        docker rm ${containerName} || true
-                    fi
-                """
             }
         }
     }
