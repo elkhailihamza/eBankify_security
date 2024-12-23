@@ -3,7 +3,7 @@ FROM maven:3.9.9 AS build
 
 WORKDIR /opt/app
 COPY ./ /opt/app
-RUN mvn clean install -Dskiptests
+RUN mvn clean install -DskipTests
 
 # Run stage using OpenJDK
 FROM openjdk:17-jdk-alpine
