@@ -10,7 +10,7 @@ spring:
   application:
     name: ebankify_security
   datasource:
-    url: jdbc:postgresql://ebankify-db:5432/main_db
+    url: jdbc:postgresql://host.docker.internal:5432/main_db
     username: admin
     password: admin
     driver-class-name: org.postgresql.Driver
