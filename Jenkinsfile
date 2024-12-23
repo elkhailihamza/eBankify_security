@@ -1,78 +1,128 @@
 pipeline {
     agent any
+    tools {
+        maven 'maven'
+        jdk 'jdk-17'
+        dockerTool 'docker'
+    }
 
     environment {
-        // Set your environment variables for database and Keycloak URLs if needed
-        SPRING_DATASOURCE_URL = 'jdbc:postgresql://localhost:5432/ebankify_security'
-        SPRING_DATASOURCE_USERNAME = 'root'
-        SPRING_DATASOURCE_PASSWORD = ';(.314Luiv./'
-        SONAR_PROJECT_KEY = "ebankify-app"
+        WORKSPACE = "/var/lib/jenkins/workspace/ebankify-deploy"
+        dockerImageTag = "ebankify-app:${env.BUILD_NUMBER}" // Match Dockerfile naming
+        containerName = "ebankify-container-${env.BUILD_NUMBER}" // Generate unique container name
+        DB_CONTAINER = "ebankify-db" // Database container name
+        SONAR_PROJECT_KEY = "ebankify-app" // Unique project key for SonarQube
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Clone Repo') {
             steps {
-                // Clone the source repository
-                git 'https://github.com/elkhailihamza/eBankify_security.git'
+                script {
+                    try {
+                        deleteDir()
+                        echo "Cloning Git repository..."
+                        checkout([$class: 'GitSCM',
+                            branches: [[name: '*/develop']],
+                            userRemoteConfigs: [[
+                                url: 'https://github.com/elkhailihamza/eBankify_security'
+                            ]]])
+                        echo "Repository cloned successfully."
+                    } catch (Exception e) {
+                        error "Failed to clone repository: ${e.getMessage()}"
+                    }
+                }
             }
         }
 
-        stage('Build & Test with Maven') {
+        stage('Setup Docker Network') {
             steps {
-                // Run Maven build and tests
                 script {
-                    sh 'mvn clean install -DskipTests=true'  // Skip tests if they are not required, or remove -DskipTests
+                    echo "Creating Docker network if it doesn't exist..."
+                    sh """
+                        docker network create cicd-network || true
+                    """
+                }
+            }
+        }
+
+        stage('Start Database') {
+            steps {
+                script {
+                    sh """
+                        # Remove existing container if it exists
+                        docker rm -f ${DB_CONTAINER} || true
+
+                        docker run -d --name ${DB_CONTAINER} \
+                            --network cicd-network \
+                            --network-alias postgres \
+                            -e POSTGRES_USER=admin \
+                            -e POSTGRES_PASSWORD=admin \
+                            -e POSTGRES_DB=main_db \
+                            -p 5434:5432 postgres:15
+
+                        sleep 10
+                    """
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image for the Spring Boot app
                 script {
-                    docker.build('ebankify-security', '-f Dockerfile .')
+                    echo "Building Docker image: ${dockerImageTag}"
+                    // Build the Docker image using the correct context (workspace directory)
+                    docker.build("${dockerImageTag}", ".")
                 }
             }
         }
 
-        stage('Deploy to Docker Compose') {
+        stage('SonarQube Analysis') {  // Add SonarQube scan stage
             steps {
                 script {
-                    // Start the application using Docker Compose
-                    sh 'docker-compose -f docker-compose.yml up -d'
+                    echo "Running SonarQube analysis"
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                            mvn clean verify sonar:sonar \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.java.binaries=target/classes \
+                        """
+                    }
                 }
             }
         }
 
-       stage('SonarQube Analysis') {  // Add SonarQube scan stage
-           steps {
-               script {
-                   echo "Running SonarQube analysis"
-                   withSonarQubeEnv('sonarqube') {
-                       sh """
-                           mvn clean verify sonar:sonar \
-                               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                               -Dsonar.java.binaries=target/classes \
-                       """
-                   }
-               }
-           }
-       }
-
-        stage('Cleanup') {
+        stage('Deploy Docker') {
             steps {
-                // Clean up after deployment
-                sh 'docker-compose down'
+                script {
+                    echo "Deploying Docker Image: ${dockerImageTag}"
+
+                    // Stop and remove the existing application container if it exists
+                    sh """
+                        if [ "\$(docker ps -q -f name=${containerName})" ]; then
+                            docker stop ${containerName}
+                            docker rm ${containerName}
+                        fi
+                    """
+
+                    // Run the newly built Docker image, linking it to the database container and using the network
+                    sh """
+                        docker run -d --name ${containerName} \
+                            --network cicd-network \
+                            -e SPRING_DATASOURCE_URL=jdbc:postgresql://ebankify-db:5432/main_db \
+                            -e SPRING_DATASOURCE_USERNAME=admin \
+                            -e SPRING_DATASOURCE_PASSWORD=admin \
+                            -p 8083:8083 ${dockerImageTag}
+                    """
+                }
             }
         }
     }
 
     post {
-        success {
-            echo 'Deployment successful!'
-        }
         failure {
-            echo 'Deployment failed!'
+            script {
+                error("Pipeline failed")
+            }
         }
     }
 }

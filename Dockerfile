@@ -1,14 +1,17 @@
-# Use an official Java runtime as the base image
-FROM openjdk:17-jdk-slim as build
+# Build stage using Maven
+FROM maven:3.9.9 AS build
 
-# Set the working directory in the container
+WORKDIR /opt/app
+COPY ./ /opt/app
+RUN mvn clean install -DskipTests
+
+# Run stage using OpenJDK
+FROM openjdk:17-jdk-alpine
+
 WORKDIR /app
+COPY --from=build /opt/app/target/ebankify_security-0.0.1-SNAPSHOT.jar app.jar
 
-# Copy the project files (replace with your actual build artifact location)
-COPY target/ebankify-security.jar /app/ebankify-security.jar
+ENV PORT=8083
+EXPOSE 8083
 
-# Expose the port the app runs on
-EXPOSE 8081
-
-# Set the command to run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "/app/ebankify-security.jar"]
+ENTRYPOINT ["java", "-jar", "-Xmx1024M", "-Dserver.port=${PORT}", "app.jar"]
