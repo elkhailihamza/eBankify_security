@@ -50,16 +50,13 @@ pipeline {
                 script {
                     sh """
                         # Remove existing container if it exists
-                        docker rm -f ${DB_CONTAINER} || true
 
                         docker run -d --name ${DB_CONTAINER} \
                             --network cicd-network \
-                            --network-alias postgres \
                             -e POSTGRES_USER=admin \
                             -e POSTGRES_PASSWORD=admin \
                             -e POSTGRES_DB=main_db \
                             -p 5434:5432 postgres:15
-
                     """
                 }
             }
