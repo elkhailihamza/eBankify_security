@@ -60,7 +60,6 @@ pipeline {
                             -e POSTGRES_DB=main_db \
                             -p 5434:5432 postgres:15
 
-                        sleep 10
                     """
                 }
             }
