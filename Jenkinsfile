@@ -70,7 +70,7 @@ pipeline {
                 script {
                     echo "Building Docker image: ${dockerImageTag}"
                     // Build the Docker image using the correct context (workspace directory)
-                    docker.build("${dockerImageTag}", ".")
+                    docker.build("${dockerImageTag}", "--build-arg SPRING_DATASOURCE_URL=jdbc:postgresql://ebankify-db:5432/main_db --build-arg SPRING_DATASOURCE_USERNAME=admin --build-arg SPRING_DATASOURCE_PASSWORD=admin .")
                 }
             }
         }
@@ -90,7 +90,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Docker') {
+        stage('Deploy Docker Image') {
             steps {
                 script {
                     echo "Deploying Docker Image: ${dockerImageTag}"
