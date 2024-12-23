@@ -1,10 +1,3 @@
-# Build stage using Maven
-FROM maven:3.9.9 AS build
-
-WORKDIR /opt/app
-COPY ./ /opt/app
-RUN mvn clean install
-
 # Run stage using OpenJDK
 FROM openjdk:17-jdk-alpine
 
