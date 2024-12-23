@@ -31,12 +31,21 @@ pipeline {
                 script {
                     sh """
                         # Remove existing container if it exists
+                        if [ \$(docker ps -aq -f name=${DB_CONTAINER}) ]; then
+                            docker stop ${DB_CONTAINER}
+                            docker rm ${DB_CONTAINER}
+                        fi
 
+                        # Ensure the volume exists
+                        docker volume create ${DB_CONTAINER}_volume
+
+                        # Start the container with the named volume
                         docker run -d --name ${DB_CONTAINER} \
                             --network cicd-network \
                             -e POSTGRES_USER=admin \
                             -e POSTGRES_PASSWORD=admin \
                             -e POSTGRES_DB=main_db \
+                            -v ${DB_CONTAINER}_volume:/var/lib/postgresql/data \
                             -p 5434:5432 postgres:15
                     """
                 }
