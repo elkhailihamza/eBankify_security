@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:15
+    container_name: db-sonarqube
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -12,6 +13,7 @@ services:
 
   sonarqube:
     image: sonarqube:community
+    container_name: sonarqube
     depends_on:
       - db
     environment:
@@ -25,6 +27,7 @@ services:
 
   jenkins:
     image: jenkins/jenkins:lts-jdk17
+    container_name: jenkins
     privileged: true
     user: root
     ports:
@@ -42,6 +45,4 @@ networks:
 
 volumes:
   jenkins_home:
-    external: true
-  postgres_data:
     external: true
