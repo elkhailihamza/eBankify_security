@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ebankify_security.dto.UserDTO;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
@@ -32,16 +31,7 @@ public class UserControllerTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
-        userDTO = new UserDTO();
-        userDTO.setId(1L);
-        userDTO.setName("John");
-        userDTO.setSurname("Doe");
-        userDTO.setEmail("john.doe@example.com");
-        userDTO.setPassword("password123");
-        userDTO.setAge(25);
-        userDTO.setMonthlyIncome(5000.0);
-        userDTO.setCreditScore(700);
+        userDTO = new UserDTO(1L, "John", "Doe", "john.doe@example.com", "password123", 25, 5000.0, 700);
     }
 
     @Test
@@ -60,11 +50,11 @@ public class UserControllerTest {
     public void testCreateNewUser_Conflict() {
         when(userService.createUser(any(UserDTO.class))).thenThrow(new EmailAlreadyInUseException("User with same email already exists!"));
 
-        try {
-            userController.createNewUser(userDTO);
-        } catch (EmailAlreadyInUseException e) {
-            assert e.getMessage().equals("User with same email already exists!");
-        }
+        ResponseEntity<UserDTO> response = userController.createNewUser(userDTO);
+
+        // This assertion assumes that your controller handles exceptions and returns an appropriate response.
+        assert response.getStatusCode() == HttpStatus.CONFLICT;
+        assert response.getBody() == null;  // No body content in case of conflict
     }
 
     @Test
@@ -83,11 +73,10 @@ public class UserControllerTest {
     public void testModifyUser_NotFound() {
         when(userService.modifyUser(any(UserDTO.class))).thenThrow(new EntityNotFoundException("User not found!"));
 
-        try {
-            userController.modifyUser(1L, userDTO);
-        } catch (EntityNotFoundException e) {
-            assert e.getMessage().equals("User not found!");
-        }
+        ResponseEntity<UserDTO> response = userController.modifyUser(1L, userDTO);
+
+        // You can handle this exception with an appropriate status code like HttpStatus.NOT_FOUND
+        assert response.getStatusCode() == HttpStatus.NOT_FOUND;
     }
 
     @Test
@@ -105,10 +94,9 @@ public class UserControllerTest {
     public void testDeleteUser_NotFound() {
         doThrow(new EntityNotFoundException("User not found!")).when(userService).deleteUser(any(UserDTO.class));
 
-        try {
-            userController.deleteUser(userDTO);
-        } catch (EntityNotFoundException e) {
-            assert e.getMessage().equals("User not found!");
-        }
+        ResponseEntity<String> response = userController.deleteUser(userDTO);
+
+        assert response.getStatusCode() == HttpStatus.NOT_FOUND;
+        assert Objects.equals(response.getBody(), "User not found!");
     }
 }

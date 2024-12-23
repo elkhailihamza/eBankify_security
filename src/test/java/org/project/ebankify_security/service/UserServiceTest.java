@@ -1,16 +1,18 @@
 package org.project.ebankify_security.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.project.ebankify_security.dao.UserDAO;
 import org.project.ebankify_security.dto.UserDTO;
 import org.project.ebankify_security.dto.mapper.UserMapper;
-import org.project.ebankify_security.entity.Role;
 import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
+import org.project.ebankify_security.exception.UnexpectedErrorException;
 import org.project.ebankify_security.service.implementation.UserServiceImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -20,13 +22,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
 
     @Mock
     private UserDAO userDao;
 
     @Mock
-    private PasswordEncoder passwordEncoder; // Mock for password encoding
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserMapper userMapper;
@@ -38,9 +41,6 @@ public class UserServiceTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
-        Role userRole = new Role();
-        userRole.setName("USER");
         userDTO = new UserDTO(1L, "John", "Doe", "john.doe@example.com", "password123", 25, 5000.0, 700);
     }
 
@@ -86,6 +86,15 @@ public class UserServiceTest {
     }
 
     @Test
+    public void testModifyUser_NotFound() {
+        when(userDao.findById(anyLong())).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(UnexpectedErrorException.class, () -> userService.modifyUser(userDTO));
+
+        assertEquals("An error has occurred!", exception.getMessage());
+    }
+
+    @Test
     public void testDeleteUser() {
         User user = new User();
         user.setId(1L);
@@ -93,7 +102,15 @@ public class UserServiceTest {
 
         userService.deleteUser(userDTO);
 
-        // Verify that the delete method was called on the userDao
         verify(userDao).delete(user);
+    }
+
+    @Test
+    public void testDeleteUser_NotFound() {
+        when(userDao.findById(anyLong())).thenReturn(Optional.empty());
+
+        Exception exception = assertThrows(EntityNotFoundException.class, () -> userService.deleteUser(userDTO));
+
+        assertEquals("User not found!", exception.getMessage());
     }
 }
