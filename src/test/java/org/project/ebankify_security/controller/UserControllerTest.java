@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -52,9 +54,8 @@ public class UserControllerTest {
 
         ResponseEntity<UserDTO> response = userController.createNewUser(userDTO);
 
-        // This assertion assumes that your controller handles exceptions and returns an appropriate response.
-        assert response.getStatusCode() == HttpStatus.CONFLICT;
-        assert response.getBody() == null;  // No body content in case of conflict
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode()); // Assert conflict response
+        assertNull(response.getBody()); // No body content expected
     }
 
     @Test
@@ -75,8 +76,7 @@ public class UserControllerTest {
 
         ResponseEntity<UserDTO> response = userController.modifyUser(1L, userDTO);
 
-        // You can handle this exception with an appropriate status code like HttpStatus.NOT_FOUND
-        assert response.getStatusCode() == HttpStatus.NOT_FOUND;
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode()); // Assert not found response
     }
 
     @Test

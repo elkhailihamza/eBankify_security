@@ -50,7 +50,7 @@ public class UserServiceTest {
         user.setId(1L);
         when(passwordEncoder.encode(any(String.class))).thenReturn("encodedPassword");
         when(userMapper.toUser(any(UserDTO.class))).thenReturn(user);
-        when(userDao.existsUserByEmail(any(String.class))).thenReturn(false);
+        when(userDao.existsUserByEmail(any(String.class))).thenReturn(false); // Ensure this is checked
         when(userDao.save(any(User.class))).thenReturn(user);
         when(userMapper.toUserDTO(any(User.class))).thenReturn(userDTO);
 
@@ -59,6 +59,9 @@ public class UserServiceTest {
         assertNotNull(createdUser);
         assertEquals(1L, createdUser.getId());
         assertEquals("encodedPassword", createdUser.getPassword());
+
+        verify(userDao).existsUserByEmail(any(String.class)); // Ensure DAO check is called
+        verify(userDao).save(any(User.class)); // Ensure save is called
     }
 
     @Test
