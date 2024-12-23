@@ -1,27 +1,14 @@
-# Build stage using Maven
-FROM maven:3.9.9 AS build
+# Use an official Java runtime as the base image
+FROM openjdk:17-jdk-slim as build
 
-WORKDIR /opt/app
-COPY ./ /opt/app
-
-# Accept build arguments for database connection details
-ARG SPRING_DATASOURCE_URL
-ARG SPRING_DATASOURCE_USERNAME
-ARG SPRING_DATASOURCE_PASSWORD
-
-ENV SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-ENV SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-ENV SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-
-RUN mvn clean install
-
-# Run stage using OpenJDK
-FROM openjdk:17-jdk-alpine
-
+# Set the working directory in the container
 WORKDIR /app
-COPY --from=build /opt/app/target/ebankify_security-0.0.1-SNAPSHOT.jar app.jar
 
-ENV PORT=8083
-EXPOSE 8083
+# Copy the project files (replace with your actual build artifact location)
+COPY target/ebankify-security.jar /app/ebankify-security.jar
 
-ENTRYPOINT ["java", "-jar", "-Xmx1024M", "-Dserver.port=${PORT}", "app.jar"]
+# Expose the port the app runs on
+EXPOSE 8081
+
+# Set the command to run the Spring Boot application
+ENTRYPOINT ["java", "-jar", "/app/ebankify-security.jar"]
