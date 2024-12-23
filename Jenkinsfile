@@ -15,25 +15,6 @@ pipeline {
     }
 
     stages {
-        stage('Clone Repo') {
-            steps {
-                script {
-                    try {
-                        deleteDir()
-                        echo "Cloning Git repository..."
-                        checkout([$class: 'GitSCM',
-                            branches: [[name: '*/develop']],
-                            userRemoteConfigs: [[
-                                url: 'https://github.com/elkhailihamza/eBankify_security'
-                            ]]])
-                        echo "Repository cloned successfully."
-                    } catch (Exception e) {
-                        error "Failed to clone repository: ${e.getMessage()}"
-                    }
-                }
-            }
-        }
-
         stage('Setup Docker Network') {
             steps {
                 script {
