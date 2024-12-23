@@ -11,6 +11,7 @@ pipeline {
         dockerImageTag = "ebankify-app:${env.BUILD_NUMBER}" // Match Dockerfile naming
         containerName = "ebankify-container-${env.BUILD_NUMBER}" // Generate unique container name
         DB_CONTAINER = "ebankify-db" // Database container name
+        SONAR_PROJECT_KEY = "ebankify-app" // Unique project key for SonarQube
     }
 
     stages {
@@ -24,8 +25,7 @@ pipeline {
                             branches: [[name: '*/develop']],
                             userRemoteConfigs: [[
                                 url: 'https://github.com/elkhailihamza/eBankify_security'
-                            ]]
-                        ])
+                            ]]])
                         echo "Repository cloned successfully."
                     } catch (Exception e) {
                         error "Failed to clone repository: ${e.getMessage()}"
@@ -48,15 +48,18 @@ pipeline {
         stage('Start Database') {
             steps {
                 script {
-                    echo "Starting database container: ${DB_CONTAINER}"
-                    // Start the database container and attach it to the network
+                    // Check and start the database container and attach it to the network
                     sh """
-                        docker run -d --name ${DB_CONTAINER} \
+                        if [ -z "$(docker ps -a -q -f name=${DB_CONTAINER})" ]; then
+                            echo "Starting database container: ${DB_CONTAINER}"
+
+                            docker run -d --name ${DB_CONTAINER} \
                             --network cicd-network \
                             -e POSTGRES_USER=admin \
                             -e POSTGRES_PASSWORD=admin \
                             -e POSTGRES_DB=main_db \
                             -p 5434:5432 postgres:15
+                        fi
                     """
                 }
             }
@@ -68,6 +71,21 @@ pipeline {
                     echo "Building Docker image: ${dockerImageTag}"
                     // Build the Docker image using the correct context (workspace directory)
                     docker.build("${dockerImageTag}", ".")
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {  // Add SonarQube scan stage
+            steps {
+                script {
+                    echo "Running SonarQube analysis"
+                    withSonarQubeEnv('sonarqube') {
+                        sh """
+                            mvn clean compile sonar:sonar \
+                                -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                                -Dsonar.java.binaries=target/classes
+                        """
+                    }
                 }
             }
         }
@@ -103,6 +121,22 @@ pipeline {
         failure {
             script {
                 error("Pipeline failed")
+                echo "Performing cleanup ..."
+                // Remove the database container to ensure a fresh start for the next pipeline run
+                sh """
+                    if [ "\$(docker ps -a -q -f name=${DB_CONTAINER})" ]; then
+                        docker stop ${DB_CONTAINER} || true
+                        docker rm ${DB_CONTAINER} || true
+                    fi
+                """
+
+                // Optionally remove the application container
+                sh """
+                    if [ "\$(docker ps -a -q -f name=${containerName})" ]; then
+                        docker stop ${containerName} || true
+                        docker rm ${containerName} || true
+                    fi
+                """
             }
         }
     }
