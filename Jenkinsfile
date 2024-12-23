@@ -107,7 +107,7 @@ pipeline {
                     sh """
                         docker run -d --name ${containerName} \
                             --network cicd-network \
-                            -e SPRING_DATASOURCE_URL=jdbc:postgresql://172.19.0.2:5432/main_db \
+                            -e SPRING_DATASOURCE_URL=jdbc:postgresql://ebankify-db:5432/main_db \
                             -e SPRING_DATASOURCE_USERNAME=admin \
                             -e SPRING_DATASOURCE_PASSWORD=admin \
                             -p 8083:8083 ${dockerImageTag}
