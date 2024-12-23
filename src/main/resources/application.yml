@@ -10,9 +10,9 @@ spring:
   application:
     name: ebankify_security
   datasource:
-    url: jdbc:postgresql://localhost:5432/ebankify_security
-    username: root
-    password: ;(.314Luiv./
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
