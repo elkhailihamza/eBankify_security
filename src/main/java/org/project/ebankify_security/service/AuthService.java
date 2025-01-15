@@ -9,4 +9,5 @@ public interface AuthService {
     void register(AuthDTO authDTO);
     User toUser(AuthDTO authDTO);
     AuthDTO toAuthDTO(User user);
+    AuthTokenResponseDTO refresh(AuthTokenResponseDTO authTokenResponseDTO);
 }

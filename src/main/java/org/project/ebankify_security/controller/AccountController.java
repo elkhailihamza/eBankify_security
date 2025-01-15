@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/accounts")
@@ -41,10 +43,12 @@ public class AccountController {
         return ResponseEntity.ok(accountService.fetchCertainAccount(accountDTO));
     }
 
-    @PostMapping("/{accountNumber}/delete")
-    public ResponseEntity<String> deleteAccount(@PathVariable String accountNumber) {
+    @DeleteMapping("/{accountNumber}/delete")
+    public ResponseEntity<Map<String, String>> deleteAccount(@PathVariable String accountNumber) {
         AccountDTO accountDTO = AccountDTO.builder().accountNumber(accountNumber).build();
         accountService.deleteAccount(accountDTO);
-        return ResponseEntity.ok("Deleted account!");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Deleted account!");
+        return ResponseEntity.ok(response);
     }
 }

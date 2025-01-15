@@ -71,4 +71,24 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(exceptionDetails, HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(InvalidFundsException.class)
+    public ResponseEntity<ExceptionDetails> handleInvalidFundsException(InvalidFundsException ex, WebRequest request) {
+        ExceptionDetails exceptionDetails = ExceptionDetails.builder()
+                .message(ex.getMessage())
+                .date(new Date())
+                .description(request.getDescription(false))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+    public ResponseEntity<ExceptionDetails> handleRefreshTokenNotFoundException(RefreshTokenNotFoundException ex, WebRequest request) {
+        ExceptionDetails exceptionDetails = ExceptionDetails.builder()
+                .message(ex.getMessage())
+                .date(new Date())
+                .description(request.getDescription(false))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.UNAUTHORIZED);
+    }
 }

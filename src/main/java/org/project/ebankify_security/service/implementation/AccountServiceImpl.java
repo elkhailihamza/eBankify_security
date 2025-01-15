@@ -47,13 +47,13 @@ public class AccountServiceImpl implements AccountService {
         }
 
         String accountNumber = getUniqueAccountNum(16);
-        Account account = Account.builder().accountNumber(accountNumber).build();
+        Account account = Account.builder().customName(accountDTO.getCustomName()).accountNumber(accountNumber).owner(user).build();
 
         return accountMapper.toAccountDTO(accountDao.save(account));
     }
 
     public List<AccountDTO> fetchAllUserAccounts() {
-        List<Account> accountDTOs = accountDao.findAccountsByOwner_Id((Long) AuthUtil.getAuthenticationId());
+            List<Account> accountDTOs = accountDao.findAccountsByOwner_Id((Long) AuthUtil.getAuthenticationId());
         return accountDTOs.stream()
                 .map(accountMapper::toAccountDTO)
                 .toList();

@@ -1,8 +1,10 @@
 spring:
   application:
     name: ebankify_security
-    jwtSecret: Zm9vYmFyY29vbG9kZjY4ZGlvb3Bsd2FyZjNkZXVvY2lwdA==
-    jwtExpirationMs: 3600000
+    jwtSecret: LJWlpPbnfKKEPfLAfJCGiSZNEfsElrSYsGbMItBwrZVBeKCgPO
+    jwtRefreshSecret: LJWlpPbnfKKEPfLAfJCGiSZNEfsElrSYsGbMItBwrZVBeKCgPO
+    jwtExpirationMs: 300000
+    jwtRefreshTokenExpirationMs: 604800000
   datasource:
     url: jdbc:postgresql://localhost:5432/ebankify_security
     username: root
@@ -13,4 +15,4 @@ spring:
       ddl-auto: update
 
 server:
-  port: 8081
+  port: 8082

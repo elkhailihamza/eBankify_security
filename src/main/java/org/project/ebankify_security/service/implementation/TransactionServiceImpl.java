@@ -1,6 +1,7 @@
 package org.project.ebankify_security.service.implementation;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dao.AccountDAO;
 import org.project.ebankify_security.dao.TransactionDAO;
@@ -22,6 +23,7 @@ import org.project.ebankify_security.util.AuthUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +33,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final AccountDAO accountDao;
     private final UserDAO userDao;
 
+    @Override
     public List<TransactionDTO> getTransactionHistory() {
         long userId = (Long) AuthUtil.getAuthenticationId();
         User user = User.builder().id(userId).build();
@@ -49,43 +52,46 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public TransactionDTO createTransaction(TransactionDTO transactionDTO) {
         Long userId = (Long) AuthUtil.getAuthenticationId();
         Transaction transaction = transactionMapper.toTransaction(transactionDTO);
-        Account srcAccount = accountDao.findAccountByAccountNumber(transaction.getSourceAccount().getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Source account not found!"));
-        Account destAccount = accountDao.findAccountByAccountNumber(transaction.getDestinationAccount().getAccountNumber()).orElseThrow(() -> new EntityNotFoundException("Destination account not found!"));
 
-        if (srcAccount.getStatus() == AccountStatus.BLOCKED || destAccount.getStatus() == AccountStatus.BLOCKED || srcAccount.getOwner().getId() != userId) {
-            throw new EntityRulesViolationException("Transaction creation failed!");
-        }
+        Account srcAccount = accountDao.findAccountByAccountNumber(transaction.getSourceAccount().getAccountNumber())
+                .orElseThrow(() -> new EntityNotFoundException("Source account not found!"));
 
-        if (srcAccount.getBalance() < transaction.getAmount()) {
-            throw new InvalidFundsException("Insufficient Funds!");
-        }
+        Account destAccount = accountDao.findAccountByAccountNumber(transaction.getDestinationAccount().getAccountNumber())
+                .orElseThrow(() -> new EntityNotFoundException("Destination account not found!"));
 
-        transaction.setStatus(transaction.getAmount() > 3000 ? TransactionStatus.PENDING : TransactionStatus.ACCEPTED);
+        validateAccountStatus(srcAccount, userId);
+        validateAccountStatus(destAccount, null);
+        validateSufficientFunds(srcAccount, transaction.getAmount());
 
-        if (transaction.getAmount() > 3000) {
+        transaction.setSourceAccount(srcAccount);
+        transaction.setDestinationAccount(destAccount);
+
+        if (transaction.getAmount() < 3000) {
+            transaction.setStatus(TransactionStatus.ACCEPTED);
             transaction.setType(TransactionType.INSTANT);
-            acceptTransaction(transactionMapper.toTransactionDTO(transaction));
         } else {
             transaction.setStatus(TransactionStatus.PENDING);
             transaction.setType(TransactionType.STANDARD);
         }
 
-        transaction.setSourceAccount(srcAccount);
-        transaction.setDestinationAccount(destAccount);
-
         transaction = transactionDao.save(transaction);
+
+        if (transaction.getStatus() == TransactionStatus.ACCEPTED) {
+            acceptTransaction(transactionMapper.toTransactionDTO(transaction));
+        }
 
         return transactionMapper.toTransactionDTO(transaction);
     }
 
     @Override
+    @Transactional
     public void acceptTransaction(TransactionDTO transactionDTO) {
-        Transaction transaction = transactionDao.findById(transactionDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Transaction not found!"));
-
-        checkTransactionStatus(transactionDTO);
+        Transaction transaction = transactionDao.findById(transactionDTO.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Transaction not found!"));
 
         transaction.getSourceAccount().setBalance(transaction.getSourceAccount().getBalance() - transaction.getAmount());
         transaction.getDestinationAccount().setBalance(transaction.getDestinationAccount().getBalance() + transaction.getAmount());
@@ -95,18 +101,35 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional
     public void refuseTransaction(TransactionDTO transactionDTO) {
-        Transaction transaction = transactionDao.findById(transactionDTO.getId()).orElseThrow(() -> new EntityNotFoundException("Transaction not found!"));
-
-        checkTransactionStatus(transactionDTO);
+        Transaction transaction = transactionDao.findById(transactionDTO.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Transaction not found!"));
 
         transaction.setStatus(TransactionStatus.REFUSED);
         transactionDao.save(transaction);
     }
 
-    private void checkTransactionStatus(TransactionDTO transactionDTO) {
-        if (transactionDTO.getStatus() != TransactionStatus.PENDING) {
-            throw new TransactionFailedException("Transaction can't be accepted!");
+    @Override
+    public List<TransactionDTO> getAllImportantTransactions() {
+        return transactionDao.findImportantTransactions()
+                .stream()
+                .map(transactionMapper::toTransactionDTO).
+                toList();
+    }
+
+    private void validateSufficientFunds(Account account, double amount) {
+        if (account.getBalance() < amount) {
+            throw new InvalidFundsException("Insufficient Funds!");
+        }
+    }
+
+    private void validateAccountStatus(Account account, Long userId) {
+        if (account.getStatus() == AccountStatus.BLOCKED) {
+            throw new EntityRulesViolationException("Account is blocked!");
+        }
+        if (userId != null && account.getOwner().getId() != userId) {
+            throw new EntityRulesViolationException("Unauthorized account access!");
         }
     }
 }

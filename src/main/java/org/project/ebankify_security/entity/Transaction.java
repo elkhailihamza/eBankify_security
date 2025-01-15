@@ -1,5 +1,6 @@
 package org.project.ebankify_security.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.project.ebankify_security.entity.type.TransactionStatus;
@@ -22,8 +23,10 @@ public class Transaction {
     private double amount;
 
     @ManyToOne
+    @JsonBackReference
     private Account sourceAccount;
     @ManyToOne
+    @JsonBackReference
     private Account destinationAccount;
     @Column(nullable = false, columnDefinition = "SMALLINT DEFAULT 1")
     private TransactionStatus status = TransactionStatus.PENDING;

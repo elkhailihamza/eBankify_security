@@ -11,6 +11,8 @@ import org.project.ebankify_security.dto.mapper.UserMapper;
 import org.project.ebankify_security.entity.Role;
 import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.exception.EmailAlreadyInUseException;
+import org.project.ebankify_security.exception.RefreshTokenNotFoundException;
+import org.project.ebankify_security.security.SecurityUser;
 import org.project.ebankify_security.service.AuthService;
 import org.project.ebankify_security.util.JwtUtils;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +23,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashSet;
 
 @Service
@@ -41,11 +44,9 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        SecurityUser securityUser = (SecurityUser) authentication.getPrincipal();
 
-        String jwtToken = jwtUtils.generateTokenFromUsername(userDetails);
-
-        return AuthTokenResponseDTO.builder().token(jwtToken).build();
+        return generateTokenResponse(securityUser);
     }
 
     @Override
@@ -74,4 +75,35 @@ public class AuthServiceImpl implements AuthService {
     public AuthDTO toAuthDTO(User user) {
         return userMapper.toAuthDTO(user);
     }
+
+    @Override
+    public AuthTokenResponseDTO refresh(AuthTokenResponseDTO authTokenResponseDTO) {
+        String refreshToken = authTokenResponseDTO.getRefreshToken();
+
+        if (refreshToken != null && !jwtUtils.checkIfJwtIsExpired(refreshToken, true) && jwtUtils.validateJwtToken(refreshToken, true)) {
+            String email = jwtUtils.getUserNameFromJwtToken(refreshToken, true);
+
+            User user = dao.findUserByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found!"));
+
+            SecurityUser securityUser = SecurityUser.builder().user(user).build();
+
+            return generateTokenResponse(securityUser);
+        }
+
+        throw new RefreshTokenNotFoundException("Unable to authenticate user, please Log in!");
+    }
+
+    private AuthTokenResponseDTO generateTokenResponse(SecurityUser securityUser) {
+        String jwtToken = jwtUtils.generateTokenFromUsername(securityUser);
+        String refreshToken = jwtUtils.generateRefreshTokenFromUsername(securityUser);
+        Date expirationDate = jwtUtils.getExpirationDate();
+
+        return AuthTokenResponseDTO.builder()
+                .token(jwtToken)
+                .refreshToken(refreshToken)
+                .expirationDate(expirationDate)
+                .build();
+    }
+
 }

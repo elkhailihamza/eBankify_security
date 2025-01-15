@@ -12,4 +12,7 @@ public interface TransactionDAO extends JpaRepository<Transaction, Long> {
 
     @Query("SELECT t FROM Transaction t WHERE t.sourceAccount.owner = :owner OR t.destinationAccount.owner = :owner")
     List<Transaction> findUserTransactionHistory(User owner);
+
+    @Query("SELECT t FROM Transaction t WHERE t.amount > 3000")
+    List<Transaction> findImportantTransactions();
 }

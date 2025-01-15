@@ -21,14 +21,16 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthTokenResponseDTO> login(@RequestBody @Valid AuthDTO authDTO) {
         AuthTokenResponseDTO tokenDTO = authService.login(authDTO);
-        return ResponseEntity.ok()
-                .header("Authorization", "Bearer " + tokenDTO.getToken())
-                .build();
+        return ResponseEntity.ok(tokenDTO);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Validated(AuthDTO.Register.class) AuthDTO authDTO) {
+    public void register(@RequestBody @Validated(AuthDTO.Register.class) AuthDTO authDTO) {
         authService.register(authDTO);
-        return null;
+    }
+
+    @PostMapping("/token/refresh")
+    public ResponseEntity<AuthTokenResponseDTO> refresh(@RequestBody AuthTokenResponseDTO authTokenResponseDTO) {
+        return ResponseEntity.ok(authService.refresh(authTokenResponseDTO));
     }
 }

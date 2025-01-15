@@ -1,5 +1,7 @@
 package org.project.ebankify_security.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.project.ebankify_security.entity.type.AccountStatus;
@@ -20,6 +22,8 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.UUID)
     @EqualsAndHashCode.Include
     private UUID id;
+
+    private String customName;
 
     @Column(nullable = false, unique = true)
     private String accountNumber;
@@ -44,7 +48,9 @@ public class Account {
     @ManyToOne
     private User owner;
     @OneToMany(mappedBy = "sourceAccount")
+    @JsonManagedReference
     private List<Transaction> sentTransactions;
     @OneToMany(mappedBy = "destinationAccount")
+    @JsonManagedReference
     private List<Transaction> receivedTransactions;
 }

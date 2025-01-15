@@ -10,4 +10,5 @@ public interface TransactionService {
     TransactionDTO createTransaction(TransactionDTO transactionDTO);
     void acceptTransaction(TransactionDTO transactionDTO);
     void refuseTransaction(TransactionDTO transactionDTO);
+    List<TransactionDTO> getAllImportantTransactions();
 }

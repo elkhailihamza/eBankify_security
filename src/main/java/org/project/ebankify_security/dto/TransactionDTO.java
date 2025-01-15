@@ -1,7 +1,6 @@
 package org.project.ebankify_security.dto;
 
 import lombok.*;
-import org.project.ebankify_security.entity.Account;
 import org.project.ebankify_security.entity.type.TransactionStatus;
 import org.project.ebankify_security.entity.type.TransactionType;
 
@@ -14,7 +13,7 @@ public class TransactionDTO {
     private long id;
     private TransactionType type;
     private double amount;
-    private Account sourceAccount;
-    private Account destinationAccount;
-    private TransactionStatus status = TransactionStatus.PENDING;
+    private String sourceAccountNumber;
+    private String destinationAccountNumber;
+    private TransactionStatus status;
 }

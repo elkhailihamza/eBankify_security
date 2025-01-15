@@ -1,20 +1,12 @@
 package org.project.ebankify_security.controller;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.project.ebankify_security.dto.LoanDTO;
-import org.project.ebankify_security.dto.response.LoanResDto;
-import org.project.ebankify_security.entity.Loan;
-import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.service.LoanService;
-import org.project.ebankify_security.dto.vm.LoanVM;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/loans")

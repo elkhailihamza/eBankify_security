@@ -1,9 +1,6 @@
 package org.project.ebankify_security.dto;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.project.ebankify_security.entity.Transaction;
-import org.project.ebankify_security.entity.User;
 import org.project.ebankify_security.entity.type.AccountStatus;
 
 import java.time.LocalDateTime;
@@ -15,16 +12,16 @@ import java.util.UUID;
 @Builder
 @Data
 public class AccountDTO {
-    public interface Request {};
 
     private UUID id;
+    private String customName;
+
     private String accountNumber;
     private double balance = 0;
     private LocalDateTime created_at;
     private AccountStatus status;
 
-    @NotNull(message = "Owner is required", groups = Request.class)
-    private User owner;
-    private List<Transaction> sentTransactions;
-    private List<Transaction> receivedTransactions;
+    private long owner_id;
+    private List<TransactionDTO> sentTransactions;
+    private List<TransactionDTO> receivedTransactions;
 }
